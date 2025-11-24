@@ -16,6 +16,13 @@ class CommentArea extends Component {
     this.fetchComments()
   }
 
+  componentDidUpdate(prevProps) {
+    // Controlla se l'asin è cambiato
+    if (prevProps.book.asin !== this.props.book.asin) {
+      this.fetchComments()
+    }
+  }
+
   fetchComments = async () => {
     const { book } = this.props
     try {
