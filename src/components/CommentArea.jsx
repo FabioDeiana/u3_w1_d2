@@ -1,32 +1,16 @@
-import { Component } from "react"
+import { useState, useEffect } from "react"
 import CommentsList from "./CommentsList"
 import AddComment from "./AddComment"
 
-class CommentArea extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      comments: [],
-      loading: true,
-      error: null,
-    }
-  }
+const CommentArea = ({ book }) => {
+  const [comments, setComments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  componentDidMount() {
-    this.fetchComments()
-  }
-
-  componentDidUpdate(prevProps) {
-    // Controlla se l'asin è cambiato
-    if (prevProps.book.asin !== this.props.book.asin) {
-      this.fetchComments()
-    }
-  }
-
-  fetchComments = async () => {
-    const { book } = this.props
+  const fetchComments = async () => {
     try {
-      this.setState({ loading: true, error: null })
+      setLoading(true)
+      setError(null)
       const response = await fetch(
         `https://striveschool-api.herokuapp.com/api/comments/${book.asin}`,
         {
@@ -40,40 +24,41 @@ class CommentArea extends Component {
         throw new Error("Errore nel caricamento dei commenti")
       }
       const data = await response.json()
-      this.setState({ comments: data, loading: false })
+      setComments(data)
+      setLoading(false)
     } catch (err) {
-      this.setState({ error: err.message, loading: false })
+      setError(err.message)
+      setLoading(false)
     }
   }
 
-  addComment = (newComment) => {
-    this.setState((prevState) => ({
-      comments: [newComment, ...prevState.comments],
-    }))
+  // useEffect come componentDidMount E componentDidUpdate
+  // Si attiva quando book.asin cambia
+  useEffect(() => {
+    fetchComments()
+  }, [book.asin]) // Array di dipendenze: si riattiva quando asin cambia
+
+  const addComment = (newComment) => {
+    setComments([newComment, ...comments])
   }
 
-  render() {
-    const { book } = this.props
-    const { comments, loading, error } = this.state
-
-    return (
-      <div className="mt-3 p-3 bg-light rounded">
-        <h5>Commenti per: {book.title}</h5>
-        {loading && <p className="text-muted">Caricamento commenti...</p>}
-        {error && <p className="text-danger">Errore: {error}</p>}
-        {!loading && !error && (
-          <>
-            <CommentsList
-              comments={comments}
-              bookAsin={book.asin}
-              onCommentDeleted={this.fetchComments}
-            />
-            <AddComment bookAsin={book.asin} onCommentAdded={this.addComment} />
-          </>
-        )}
-      </div>
-    )
-  }
+  return (
+    <div className="mt-3 p-3 bg-light rounded">
+      <h5>Commenti per: {book.title}</h5>
+      {loading && <p className="text-muted">Caricamento commenti...</p>}
+      {error && <p className="text-danger">Errore: {error}</p>}
+      {!loading && !error && (
+        <>
+          <CommentsList
+            comments={comments}
+            bookAsin={book.asin}
+            onCommentDeleted={fetchComments}
+          />
+          <AddComment bookAsin={book.asin} onCommentAdded={addComment} />
+        </>
+      )}
+    </div>
+  )
 }
 
 export default CommentArea

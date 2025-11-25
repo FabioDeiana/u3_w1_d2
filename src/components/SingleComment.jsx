@@ -1,19 +1,13 @@
-import { Component } from "react"
+import { useState } from "react"
 
-class SingleComment extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      loading: false,
-      error: null,
-    }
-  }
+const SingleComment = ({ comment, onCommentDeleted }) => {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  handleDelete = async () => {
-    const { comment, onCommentDeleted } = this.props
-
+  const handleDelete = async () => {
     try {
-      this.setState({ loading: true, error: null })
+      setLoading(true)
+      setError(null)
 
       const response = await fetch(
         `https://striveschool-api.herokuapp.com/api/comments/${comment._id}`,
@@ -32,40 +26,36 @@ class SingleComment extends Component {
       }
 
       onCommentDeleted()
-      this.setState({ loading: false })
+      setLoading(false)
     } catch (err) {
-      this.setState({ error: err.message, loading: false })
+      setError(err.message)
+      setLoading(false)
     }
   }
 
-  render() {
-    const { comment } = this.props
-    const { loading, error } = this.state
-
-    return (
-      <div className="card mb-3 p-3">
-        <div className="d-flex justify-content-between align-items-start">
-          <div className="flex-grow-1">
-            <div className="mb-2">
-              <span className="badge bg-warning text-dark me-2">
-                {comment.rate} ⭐
-              </span>
-              <small className="text-muted">{comment.author}</small>
-            </div>
-            <p className="mb-0">{comment.comment}</p>
-            {error && <p className="text-danger mt-2 mb-0 small">{error}</p>}
+  return (
+    <div className="card mb-3 p-3">
+      <div className="d-flex justify-content-between align-items-start">
+        <div className="flex-grow-1">
+          <div className="mb-2">
+            <span className="badge bg-warning text-dark me-2">
+              {comment.rate} ⭐
+            </span>
+            <small className="text-muted">{comment.author}</small>
           </div>
-          <button
-            onClick={this.handleDelete}
-            disabled={loading}
-            className="btn btn-sm btn-danger ms-3"
-          >
-            {loading ? "Eliminando..." : "Elimina"}
-          </button>
+          <p className="mb-0">{comment.comment}</p>
+          {error && <p className="text-danger mt-2 mb-0 small">{error}</p>}
         </div>
+        <button
+          onClick={handleDelete}
+          disabled={loading}
+          className="btn btn-sm btn-danger ms-3"
+        >
+          {loading ? "Eliminando..." : "Elimina"}
+        </button>
       </div>
-    )
-  }
+    </div>
+  )
 }
 
 export default SingleComment

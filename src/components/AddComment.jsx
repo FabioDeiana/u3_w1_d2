@@ -1,38 +1,36 @@
-import { Component } from "react"
+import { useState } from "react"
 import Form from "react-bootstrap/Form"
 import Button from "react-bootstrap/Button"
 
-class AddComment extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      comment: "",
-      rate: 3,
-      loading: false,
-      error: null,
-    }
+const AddComment = ({ bookAsin, onCommentAdded }) => {
+  // UNICO useState per tutto il form (come richiesto)
+  const [formData, setFormData] = useState({
+    comment: "",
+    rate: 3,
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Handler generico per tutti i campi del form
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
   }
 
-  handleCommentChange = (e) => {
-    this.setState({ comment: e.target.value })
-  }
-
-  handleRateChange = (e) => {
-    this.setState({ rate: e.target.value })
-  }
-
-  handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const { comment, rate } = this.state
-    const { bookAsin, onCommentAdded } = this.props
 
-    if (!comment.trim()) {
-      this.setState({ error: "Scrivi un commento!" })
+    if (!formData.comment.trim()) {
+      setError("Scrivi un commento!")
       return
     }
 
     try {
-      this.setState({ loading: true, error: null })
+      setLoading(true)
+      setError(null)
 
       const response = await fetch(
         "https://striveschool-api.herokuapp.com/api/comments",
@@ -44,8 +42,8 @@ class AddComment extends Component {
               "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OTFmMjg4NDIzZTc0MDAwMTVmN2ZkZWQiLCJpYXQiOjE3NjM2NDk2NjgsImV4cCI6MTc2NDg1OTI2OH0.B-fhl9uA_W2-im-0mdQmqmYqs3ltGkWVHMRiD0SJLzU",
           },
           body: JSON.stringify({
-            comment: comment,
-            rate: rate,
+            comment: formData.comment,
+            rate: formData.rate,
             elementId: bookAsin,
           }),
         }
@@ -58,56 +56,56 @@ class AddComment extends Component {
       const newComment = await response.json()
       onCommentAdded(newComment)
 
-      this.setState({
+      // Reset del form
+      setFormData({
         comment: "",
         rate: 3,
-        loading: false,
       })
+      setLoading(false)
     } catch (err) {
-      this.setState({ error: err.message, loading: false })
+      setError(err.message)
+      setLoading(false)
     }
   }
 
-  render() {
-    const { comment, rate, loading, error } = this.state
+  return (
+    <Form onSubmit={handleSubmit} className="mt-4">
+      <Form.Group className="mb-3">
+        <Form.Label>Aggiungi un commento</Form.Label>
+        <Form.Control
+          as="textarea"
+          rows={3}
+          name="comment"
+          value={formData.comment}
+          onChange={handleChange}
+          placeholder="Scrivi il tuo commento..."
+          disabled={loading}
+        />
+      </Form.Group>
 
-    return (
-      <Form onSubmit={this.handleSubmit} className="mt-4">
-        <Form.Group className="mb-3">
-          <Form.Label>Aggiungi un commento</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={3}
-            value={comment}
-            onChange={this.handleCommentChange}
-            placeholder="Scrivi il tuo commento..."
-            disabled={loading}
-          />
-        </Form.Group>
+      <Form.Group className="mb-3">
+        <Form.Label>Voto</Form.Label>
+        <Form.Select
+          name="rate"
+          value={formData.rate}
+          onChange={handleChange}
+          disabled={loading}
+        >
+          <option value={1}>1 stella</option>
+          <option value={2}>2 stelle</option>
+          <option value={3}>3 stelle</option>
+          <option value={4}>4 stelle</option>
+          <option value={5}>5 stelle</option>
+        </Form.Select>
+      </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Voto</Form.Label>
-          <Form.Select
-            value={rate}
-            onChange={this.handleRateChange}
-            disabled={loading}
-          >
-            <option value={1}>1 stella</option>
-            <option value={2}>2 stelle</option>
-            <option value={3}>3 stelle</option>
-            <option value={4}>4 stelle</option>
-            <option value={5}>5 stelle</option>
-          </Form.Select>
-        </Form.Group>
+      {error && <p className="text-danger">{error}</p>}
 
-        {error && <p className="text-danger">{error}</p>}
-
-        <Button variant="primary" type="submit" disabled={loading}>
-          {loading ? "Invio..." : "Invia commento"}
-        </Button>
-      </Form>
-    )
-  }
+      <Button variant="primary" type="submit" disabled={loading}>
+        {loading ? "Invio..." : "Invia commento"}
+      </Button>
+    </Form>
+  )
 }
 
 export default AddComment
