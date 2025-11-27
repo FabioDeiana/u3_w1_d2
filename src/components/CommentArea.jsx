@@ -8,6 +8,8 @@ const CommentArea = ({ book }) => {
   const [error, setError] = useState(null)
 
   const fetchComments = async () => {
+    if (!book || !book.asin) return
+
     try {
       setLoading(true)
       setError(null)
@@ -32,20 +34,33 @@ const CommentArea = ({ book }) => {
     }
   }
 
-  // useEffect come componentDidMount E componentDidUpdate
-  // Si attiva quando book.asin cambia
   useEffect(() => {
     fetchComments()
-  }, [book.asin]) // Array di dipendenze: si riattiva quando asin cambia
+  }, [book?.asin])
 
   const addComment = (newComment) => {
     setComments([newComment, ...comments])
   }
 
+  if (!book) {
+    return (
+      <div className="mt-3 p-3 bg-light rounded" data-testid="comment-area">
+        <p className="text-muted">Seleziona un libro per vedere i commenti</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="mt-3 p-3 bg-light rounded">
+    <div className="mt-3 p-3 bg-light rounded" data-testid="comment-area">
+      {" "}
+      {}
       <h5>Commenti per: {book.title}</h5>
-      {loading && <p className="text-muted">Caricamento commenti...</p>}
+      {loading && (
+        <p className="text-muted" data-testid="loading-spinner">
+          Caricamento commenti...
+        </p>
+      )}{" "}
+      {}
       {error && <p className="text-danger">Errore: {error}</p>}
       {!loading && !error && (
         <>
